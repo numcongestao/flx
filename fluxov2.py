@@ -156,4 +156,3 @@ else:
         st.session_state.autenticado = False
         st.session_state.controlador = None
         st.experimental_rerun()  # Reiniciar a aplicação para voltar à tela de login
-
