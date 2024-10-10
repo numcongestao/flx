@@ -72,10 +72,10 @@ if "autenticado" not in st.session_state:
 if not st.session_state.autenticado:
     # Tela de autenticação
     st.title("Gerenciamento de Fluxo de Caixa")
-    nome_controlador = st.text_input("Nome do Controlador")
-    senha_controlador = st.text_input("Senha", type="password")
+    nome_controlador = st.text_input("Nome do Controlador", key="nome_controlador")
+    senha_controlador = st.text_input("Senha", type="password", key="senha_controlador")
 
-    if st.button("Entrar"):
+    if st.button("Entrar", key="entrar_button"):
         if autenticar_controlador(nome_controlador, senha_controlador):
             st.success(f"Bem-vindo(a), {nome_controlador}!")
             st.session_state.autenticado = True
@@ -99,25 +99,25 @@ else:
     
     if not df.empty:
         # Mostrar a tabela com botões de ação
-        st.dataframe(df)
+        st.dataframe(df, key="tabela_dados")
 
         # Selecionar uma transação pelo índice
-        selected_index = st.number_input("Selecione o índice da transação", min_value=0, max_value=len(df)-1, step=1)
+        selected_index = st.number_input("Selecione o índice da transação", min_value=0, max_value=len(df)-1, step=1, key="select_index")
 
-        if st.button("Excluir"):
+        if st.button("Excluir", key="excluir_button"):
             excluir_dados(dados, selected_index)
             st.success("Transação excluída com sucesso!")
             st.rerun()  # Recarregar a página para refletir a exclusão
 
         # Carregar os dados da transação selecionada para edição
         st.subheader("Editar Transação")
-        data_edit = st.date_input("Data", value=datetime.strptime(df["data"][selected_index], "%d/%m/%Y"))
-        tipo_edit = st.selectbox("Tipo", ["Entrada", "Saída"], index=["Entrada", "Saída"].index(df["tipo"][selected_index]))
-        descricao_edit = st.text_input("Descrição", value=df["descricao"][selected_index])
-        forma_pagamento_edit = st.selectbox("Forma de Pagamento", ["Dinheiro", "Cartão", "Boleto", "PIX"], index=["Dinheiro", "Cartão", "Boleto", "PIX"].index(df["forma_pagamento"][selected_index]))
-        valor_edit = st.text_input("Valor (R$)", value=str(df["valor"][selected_index]))
+        data_edit = st.date_input("Data", value=datetime.strptime(df["data"][selected_index], "%d/%m/%Y"), key="data_edit")
+        tipo_edit = st.selectbox("Tipo", ["Entrada", "Saída"], index=["Entrada", "Saída"].index(df["tipo"][selected_index]), key="tipo_edit")
+        descricao_edit = st.text_input("Descrição", value=df["descricao"][selected_index], key="descricao_edit")
+        forma_pagamento_edit = st.selectbox("Forma de Pagamento", ["Dinheiro", "Cartão", "Boleto", "PIX"], index=["Dinheiro", "Cartão", "Boleto", "PIX"].index(df["forma_pagamento"][selected_index]), key="forma_pagamento_edit")
+        valor_edit = st.text_input("Valor (R$)", value=str(df["valor"][selected_index]), key="valor_edit")
 
-        if st.button("Salvar Alterações"):
+        if st.button("Salvar Alterações", key="salvar_alteracoes_button"):
             try:
                 valor_edit = float(valor_edit.replace(",", "."))
                 editar_dados(dados, selected_index, data_edit.strftime("%d/%m/%Y"), tipo_edit, descricao_edit, forma_pagamento_edit, valor_edit)
@@ -128,14 +128,14 @@ else:
 
     # Inserir novos dados
     st.subheader("Inserir nova transação")
-    data = st.date_input("Data da Entrada/Saída")
-    tipo = st.selectbox("Tipo", ["Entrada", "Saída"])
-    descricao = st.text_input("Descrição")
-    forma_pagamento = st.selectbox("Forma de Pagamento", ["Dinheiro", "Cartão", "Boleto", "PIX"])
-    valor = st.text_input("Valor (R$)")
+    data = st.date_input("Data da Entrada/Saída", key="data_nova_transacao")
+    tipo = st.selectbox("Tipo", ["Entrada", "Saída"], key="tipo_nova_transacao")
+    descricao = st.text_input("Descrição", key="descricao_nova_transacao")
+    forma_pagamento = st.selectbox("Forma de Pagamento", ["Dinheiro", "Cartão", "Boleto", "PIX"], key="forma_pagamento_nova_transacao")
+    valor = st.text_input("Valor (R$)", key="valor_nova_transacao")
 
     # Conversão do valor para float
-    if st.button("Inserir"):
+    if st.button("Inserir", key="inserir_button"):
         try:
             valor = float(valor.replace(",", "."))
             inserir_dados(dados, data.strftime("%d/%m/%Y"), tipo, descricao, forma_pagamento, valor, st.session_state.controlador)
@@ -145,17 +145,17 @@ else:
 
     # Sidebar: Visualizar tabela e Download
     st.sidebar.header("Menu")
-    if st.sidebar.button("Visualizar tabela completa"):
+    if st.sidebar.button("Visualizar tabela completa", key="visualizar_tabela"):
         st.sidebar.write("Tabela completa dos dados")
         df = pd.DataFrame(dados["dados"])
-        st.sidebar.dataframe(df)
+        st.sidebar.dataframe(df, key="tabela_completa")
 
-    if st.sidebar.button("Download dos dados"):
+    if st.sidebar.button("Download dos dados", key="download_dados"):
         df = pd.DataFrame(dados["dados"])
         st.sidebar.download_button(label="Baixar CSV", data=df.to_csv(index=False), file_name="fluxo_caixa.csv", mime="text/csv")
 
     # Opção de sair
-    if st.sidebar.button("Sair"):
+    if st.sidebar.button("Sair", key="sair_button"):
         st.session_state.autenticado = False
         st.session_state.controlador = None
         st.rerun()  # Reiniciar a aplicação para voltar à tela de login
