@@ -68,6 +68,8 @@ dados = carregar_dados()
 # Usar session_state para manter o estado de autenticação
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
+if "mostrar_gerenciamento" not in st.session_state:
+    st.session_state.mostrar_gerenciamento = False
 
 if not st.session_state.autenticado:
     # Tela de autenticação
@@ -93,38 +95,43 @@ else:
     st.metric("Total de Entradas", f"R$ {total_entradas:,.2f}")
     st.metric("Total de Saídas", f"R$ {total_saidas:,.2f}")
 
-    # Exibir tabela para seleção de item a ser editado ou excluído
-    st.subheader("Gerenciar Transações")
-    df = pd.DataFrame(dados["dados"])
-    
-    if not df.empty:
-        # Mostrar a tabela com botões de ação
-        st.dataframe(df, key="tabela_dados")
+    # Botão para mostrar/ocultar a seção de gerenciamento de transações
+    if st.button("Gerenciar", key="gerenciar_button"):
+        st.session_state.mostrar_gerenciamento = not st.session_state.mostrar_gerenciamento
 
-        # Selecionar uma transação pelo índice
-        selected_index = st.number_input("Selecione o índice da transação", min_value=0, max_value=len(df)-1, step=1, key="select_index")
+    # Exibir gerenciamento de transações apenas se o controlador clicar no botão "Gerenciar"
+    if st.session_state.mostrar_gerenciamento:
+        st.subheader("Gerenciar Transações")
+        df = pd.DataFrame(dados["dados"])
 
-        if st.button("Excluir", key="excluir_button"):
-            excluir_dados(dados, selected_index)
-            st.success("Transação excluída com sucesso!")
-            st.rerun()  # Recarregar a página para refletir a exclusão
+        if not df.empty:
+            # Mostrar a tabela com botões de ação
+            st.dataframe(df, key="tabela_dados")
 
-        # Carregar os dados da transação selecionada para edição
-        st.subheader("Editar Transação")
-        data_edit = st.date_input("Data", value=datetime.strptime(df["data"][selected_index], "%d/%m/%Y"), key="data_edit")
-        tipo_edit = st.selectbox("Tipo", ["Entrada", "Saída"], index=["Entrada", "Saída"].index(df["tipo"][selected_index]), key="tipo_edit")
-        descricao_edit = st.text_input("Descrição", value=df["descricao"][selected_index], key="descricao_edit")
-        forma_pagamento_edit = st.selectbox("Forma de Pagamento", ["Dinheiro", "Cartão", "Boleto", "PIX"], index=["Dinheiro", "Cartão", "Boleto", "PIX"].index(df["forma_pagamento"][selected_index]), key="forma_pagamento_edit")
-        valor_edit = st.text_input("Valor (R$)", value=str(df["valor"][selected_index]), key="valor_edit")
+            # Selecionar uma transação pelo índice
+            selected_index = st.number_input("Selecione o índice da transação", min_value=0, max_value=len(df)-1, step=1, key="select_index")
 
-        if st.button("Salvar Alterações", key="salvar_alteracoes_button"):
-            try:
-                valor_edit = float(valor_edit.replace(",", "."))
-                editar_dados(dados, selected_index, data_edit.strftime("%d/%m/%Y"), tipo_edit, descricao_edit, forma_pagamento_edit, valor_edit)
-                st.success("Transação editada com sucesso!")
-                st.rerun()  # Recarregar para refletir as alterações
-            except ValueError:
-                st.error("Por favor, insira um valor numérico válido.")
+            if st.button("Excluir", key="excluir_button"):
+                excluir_dados(dados, selected_index)
+                st.success("Transação excluída com sucesso!")
+                st.rerun()  # Recarregar a página para refletir a exclusão
+
+            # Carregar os dados da transação selecionada para edição
+            st.subheader("Editar Transação")
+            data_edit = st.date_input("Data", value=datetime.strptime(df["data"][selected_index], "%d/%m/%Y"), key="data_edit")
+            tipo_edit = st.selectbox("Tipo", ["Entrada", "Saída"], index=["Entrada", "Saída"].index(df["tipo"][selected_index]), key="tipo_edit")
+            descricao_edit = st.text_input("Descrição", value=df["descricao"][selected_index], key="descricao_edit")
+            forma_pagamento_edit = st.selectbox("Forma de Pagamento", ["Dinheiro", "Cartão", "Boleto", "PIX"], index=["Dinheiro", "Cartão", "Boleto", "PIX"].index(df["forma_pagamento"][selected_index]), key="forma_pagamento_edit")
+            valor_edit = st.text_input("Valor (R$)", value=str(df["valor"][selected_index]), key="valor_edit")
+
+            if st.button("Salvar Alterações", key="salvar_alteracoes_button"):
+                try:
+                    valor_edit = float(valor_edit.replace(",", "."))
+                    editar_dados(dados, selected_index, data_edit.strftime("%d/%m/%Y"), tipo_edit, descricao_edit, forma_pagamento_edit, valor_edit)
+                    st.success("Transação editada com sucesso!")
+                    st.rerun()  # Recarregar para refletir as alterações
+                except ValueError:
+                    st.error("Por favor, insira um valor numérico válido.")
 
     # Inserir novos dados
     st.subheader("Inserir nova transação")
